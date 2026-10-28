@@ -184,7 +184,7 @@ img { display: block; max-width: 100%; }
   }
 }
 .explore-dropdown {
-  min-width: 420px;
+  min-width: 500px;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -258,9 +258,10 @@ img { display: block; max-width: 100%; }
   color: var(--mauve-dark);
 }
 .dropdown-events-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 4px;
 }
 .dropdown-event-item {
   display: flex;
