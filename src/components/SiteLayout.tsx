@@ -29,8 +29,7 @@ function Brand() {
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
-  const [eventsOpen, setEventsOpen] = useState(false);
+  const [exploreOpen, setExploreOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   React.useEffect(() => {
@@ -43,8 +42,7 @@ function Header() {
 
   const closeMenu = () => setMenuOpen(false);
   const closeDropdowns = () => {
-    setCategoriesOpen(false);
-    setEventsOpen(false);
+    setExploreOpen(false);
     closeMenu();
   };
 
@@ -71,71 +69,63 @@ function Header() {
             <button
               className="nav-link dropdown-trigger"
               type="button"
-              aria-expanded={categoriesOpen}
+              aria-expanded={exploreOpen}
               aria-haspopup="true"
               onClick={() => {
-                setCategoriesOpen((open) => !open);
-                setEventsOpen(false);
+                setExploreOpen((open) => !open);
               }}
             >
-              Kategorije <ChevronDown size={16} />
+              <Search size={16} />
+              Razišči <ChevronDown size={16} />
             </button>
-            {categoriesOpen && (
-              <div className="dropdown-panel categories-dropdown">
-                <div className="dropdown-grid">
-                  {categories.slice(0, 8).map((category) => (
-                    <Link
-                      key={category.id}
-                      to={`/ponudniki?kategorija=${category.id}`}
-                      onClick={closeDropdowns}
-                      className="dropdown-item"
-                    >
-                      <span className="dropdown-item-icon">{category.icon && <category.icon size={18} />}</span>
-                      <span className="dropdown-item-text">{category.name}</span>
-                    </Link>
-                  ))}
+            {exploreOpen && (
+              <div className="dropdown-panel explore-dropdown">
+                <div className="explore-section">
+                  <div className="explore-heading">Po kategorijah</div>
+                  <div className="dropdown-grid">
+                    {categories.slice(0, 8).map((category) => (
+                      <Link
+                        key={category.id}
+                        to={`/ponudniki?kategorija=${category.id}`}
+                        onClick={closeDropdowns}
+                        className="dropdown-item"
+                      >
+                        <span className="dropdown-item-icon">{category.icon && <category.icon size={18} />}</span>
+                        <span className="dropdown-item-text">{category.name}</span>
+                      </Link>
+                    ))}
+                  </div>
+                  <Link
+                    className="dropdown-footer"
+                    to="/ponudniki"
+                    onClick={closeDropdowns}
+                  >
+                    Vse kategorije <ArrowRight size={14} />
+                  </Link>
                 </div>
-                <Link
-                  className="dropdown-footer"
-                  to="/ponudniki"
-                  onClick={closeDropdowns}
-                >
-                  Vse kategorije <ArrowRight size={14} />
-                </Link>
-              </div>
-            )}
-          </div>
-          <div className="nav-dropdown">
-            <button
-              className="nav-link dropdown-trigger"
-              type="button"
-              aria-expanded={eventsOpen}
-              aria-haspopup="true"
-              onClick={() => {
-                setEventsOpen((open) => !open);
-                setCategoriesOpen(false);
-              }}
-            >
-              Dogodki <ChevronDown size={16} />
-            </button>
-            {eventsOpen && (
-              <div className="dropdown-panel events-dropdown">
-                <div className="dropdown-events-list">
-                  {eventTypes.map((eventType) => (
-                    <Link
-                      key={eventType.id}
-                      to={eventType.id === 'maturantski-ples' ? '/kategorije/maturantski-plesi' : `/ponudniki?dogodek=${eventType.id}`}
-                      onClick={closeDropdowns}
-                      className="dropdown-event-item"
-                    >
-                      <span className="dropdown-event-emoji">{eventType.emoji}</span>
-                      <span className="dropdown-event-name">{eventType.name}</span>
-                    </Link>
-                  ))}
+                
+                <div className="explore-divider"></div>
+                
+                <div className="explore-section">
+                  <div className="explore-heading">Po vrsti dogodka</div>
+                  <div className="dropdown-events-list">
+                    {eventTypes.map((eventType) => (
+                      <Link
+                        key={eventType.id}
+                        to={eventType.id === 'maturantski-ples' ? '/kategorije/maturantski-plesi' : `/ponudniki?dogodek=${eventType.id}`}
+                        onClick={closeDropdowns}
+                        className="dropdown-event-item"
+                      >
+                        <span className="dropdown-event-emoji">{eventType.emoji}</span>
+                        <span className="dropdown-event-name">{eventType.name}</span>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
           </div>
+          
           <NavLink 
             className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} 
             to="/ponudniki" 
