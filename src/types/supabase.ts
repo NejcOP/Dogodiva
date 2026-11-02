@@ -612,6 +612,62 @@ export interface Database {
           updated_at?: string;
         };
       };
+      provider_applications: {
+        Row: {
+          id: string;
+          business_name: string;
+          contact_person: string;
+          email: string;
+          phone: string;
+          category_id: string;
+          city: string;
+          website: string | null;
+          description: string | null;
+          status: 'pending' | 'approved' | 'rejected';
+          submitted_by: string | null;
+          reviewed_by: string | null;
+          review_notes: string | null;
+          created_at: string;
+          updated_at: string;
+          reviewed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          business_name: string;
+          contact_person: string;
+          email: string;
+          phone: string;
+          category_id: string;
+          city: string;
+          website?: string | null;
+          description?: string | null;
+          status?: 'pending' | 'approved' | 'rejected';
+          submitted_by?: string | null;
+          reviewed_by?: string | null;
+          review_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          reviewed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          business_name?: string;
+          contact_person?: string;
+          email?: string;
+          phone?: string;
+          category_id?: string;
+          city?: string;
+          website?: string | null;
+          description?: string | null;
+          status?: 'pending' | 'approved' | 'rejected';
+          submitted_by?: string | null;
+          reviewed_by?: string | null;
+          review_notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          reviewed_at?: string | null;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
