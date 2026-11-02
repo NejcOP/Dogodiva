@@ -46,7 +46,10 @@ export default function AuthPage({ mode }: AuthPageProps) {
         setNotice('Prijava je uspela.');
         navigate(searchParams.get('redirect') || '/ponudniki');
       } else {
-        setNotice('Račun je ustvarjen. Preveri e-pošto, če je v Supabase vključena potrditev naslova.');
+        setNotice('Račun je ustvarjen. Preusmerjam te …');
+        setTimeout(() => {
+          navigate('/ponudniki');
+        }, 500);
       }
     } catch (authError) {
       setError(authError instanceof Error ? authError.message : 'Prijava ni uspela. Poskusi znova.');

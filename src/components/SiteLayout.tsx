@@ -31,6 +31,7 @@ function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const dropdownTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -40,10 +41,31 @@ function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  React.useEffect(() => {
+    return () => {
+      if (dropdownTimeoutRef.current) {
+        clearTimeout(dropdownTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const closeMenu = () => setMenuOpen(false);
   const closeDropdowns = () => {
     setExploreOpen(false);
     closeMenu();
+  };
+
+  const handleDropdownMouseLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setExploreOpen(false);
+    }, 150);
+  };
+
+  const handleDropdownMouseEnter = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+    }
+    setExploreOpen(true);
   };
 
   return (
@@ -65,15 +87,16 @@ function Header() {
           className={`main-nav ${menuOpen ? 'is-open' : ''}`} 
           aria-label="Glavna navigacija"
         >
-          <div className="nav-dropdown">
+          <div 
+            className="nav-dropdown"
+            onMouseEnter={handleDropdownMouseEnter}
+            onMouseLeave={handleDropdownMouseLeave}
+          >
             <button
               className="nav-link dropdown-trigger"
               type="button"
               aria-expanded={exploreOpen}
               aria-haspopup="true"
-              onClick={() => {
-                setExploreOpen((open) => !open);
-              }}
             >
               <Search size={16} />
               Razišči <ChevronDown size={16} />

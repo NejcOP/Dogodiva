@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarDays, MapPin, Search, UsersRound } from 'lucide-react';
+import CustomSelect from './CustomSelect';
 import { eventTypes } from '../data/eventTypes';
 
 type SearchFormProps = {
@@ -39,22 +40,26 @@ export default function SearchForm({
 
   return (
     <form className={`search-panel ${compact ? 'search-panel-compact' : ''}`} onSubmit={handleSubmit}>
-      <label className="search-field">
+      <div className="search-field">
         <span className="search-field-icon">
           <Search size={18} />
         </span>
         <span className="search-field-content">
           <span className="search-field-label">Kakšen dogodek?</span>
-          <select aria-label="Vrsta dogodka" value={eventType} onChange={(event) => setEventType(event.target.value)}>
-            <option value="">Vsi dogodki</option>
-            {eventTypes.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+          <CustomSelect
+            options={[
+              { value: '', label: 'Vsi dogodki' },
+              ...eventTypes.map((item) => ({
+                value: item.id,
+                label: item.name,
+              })),
+            ]}
+            value={eventType}
+            onChange={setEventType}
+            placeholder="Vsi dogodki"
+          />
         </span>
-      </label>
+      </div>
       <label className="search-field">
         <span className="search-field-icon">
           <MapPin size={18} />
@@ -69,7 +74,7 @@ export default function SearchForm({
           />
         </span>
       </label>
-      <label className="search-field">
+      <label className="search-field search-field-date">
         <span className="search-field-icon">
           <CalendarDays size={18} />
         </span>
@@ -80,6 +85,7 @@ export default function SearchForm({
             type="date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
+            className="date-input"
           />
         </span>
       </label>
