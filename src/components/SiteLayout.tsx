@@ -11,10 +11,12 @@ import {
   Search,
   Zap,
   Users,
+  LogOut,
 } from 'lucide-react';
 import { categories } from '../data/categories';
 import { eventTypes } from '../data/eventTypes';
 import { sl } from '../i18n/sl';
+import { useAuth } from '../hooks/useAuth';
 
 function Brand() {
   return (
@@ -30,8 +32,11 @@ function Brand() {
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user, userProfile, logout } = useAuth();
   const dropdownTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const profileTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -46,12 +51,34 @@ function Header() {
       if (dropdownTimeoutRef.current) {
         clearTimeout(dropdownTimeoutRef.current);
       }
+      if (profileTimeoutRef.current) {
+        clearTimeout(profileTimeoutRef.current);
+      }
     };
   }, []);
 
   const closeMenu = () => setMenuOpen(false);
   const closeDropdowns = () => {
     setExploreOpen(false);
+    closeMenu();
+  };
+
+  const handleProfileMouseLeave = () => {
+    profileTimeoutRef.current = setTimeout(() => {
+      setProfileOpen(false);
+    }, 150);
+  };
+
+  const handleProfileMouseEnter = () => {
+    if (profileTimeoutRef.current) {
+      clearTimeout(profileTimeoutRef.current);
+    }
+    setProfileOpen(true);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setProfileOpen(false);
     closeMenu();
   };
 
@@ -176,12 +203,61 @@ function Header() {
             Postani ponudnik
           </Link>
           <div className="nav-actions">
-            <Link className="nav-login" to="/prijava" onClick={closeMenu}>
-              Prijava
-            </Link>
-            <Link className="button button-small button-primary" to="/registracija" onClick={closeMenu}>
-              Ustvari račun
-            </Link>
+            {user && userProfile ? (
+              <div 
+                className="profile-menu"
+                onMouseEnter={handleProfileMouseEnter}
+                onMouseLeave={handleProfileMouseLeave}
+              >
+                <button
+                  className="profile-button"
+                  type="button"
+                  aria-expanded={profileOpen}
+                  aria-haspopup="true"
+                >
+                  {userProfile.avatar_url && (
+                    <img 
+                      src={userProfile.avatar_url} 
+                      alt={userProfile.full_name || 'Profil'} 
+                      className="profile-avatar"
+                    />
+                  )}
+                  <span className="profile-name">{userProfile.full_name || user.email}</span>
+                  <ChevronDown size={16} />
+                </button>
+                {profileOpen && (
+                  <div className="profile-dropdown">
+                    <Link 
+                      to="/profil" 
+                      className="profile-menu-item"
+                      onClick={() => {
+                        setProfileOpen(false);
+                        closeMenu();
+                      }}
+                    >
+                      Moj profil
+                    </Link>
+                    <button
+                      type="button"
+                      className="profile-menu-item profile-logout"
+                      onClick={handleLogout}
+                    >
+                      <LogOut size={14} />
+                      Odjava
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link className="nav-login" to="/prijava" onClick={closeMenu}>
+                  Prijava
+                </Link>
+                <Link className="button button-small button-primary" to="/registracija" onClick={closeMenu}>
+                  Ustvari račun
+                </Link>
+              </>
+            )}
           </div>
         </nav>
       </div>
