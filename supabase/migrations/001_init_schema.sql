@@ -2,9 +2,6 @@
 -- DOGODIVA - Complete Database Schema
 -- ============================================================================
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- ============================================================================
 -- 1. PROFILES - User profiles connected to Supabase Auth
 -- ============================================================================
@@ -30,7 +27,7 @@ CREATE INDEX idx_profiles_email ON public.profiles(email);
 -- 2. CATEGORIES - Event and service categories
 -- ============================================================================
 CREATE TABLE public.categories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL UNIQUE,
   slug TEXT NOT NULL UNIQUE,
   description TEXT,
@@ -48,7 +45,7 @@ CREATE INDEX idx_categories_is_active ON public.categories(is_active);
 -- 3. PROVIDER_PROFILES - Additional info for service providers
 -- ============================================================================
 CREATE TABLE public.provider_profiles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL UNIQUE REFERENCES public.profiles(id) ON DELETE CASCADE,
   business_name TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
@@ -82,7 +79,7 @@ CREATE INDEX idx_provider_profiles_is_featured ON public.provider_profiles(is_fe
 -- 4. PROVIDER_SERVICES - Services offered by providers
 -- ============================================================================
 CREATE TABLE public.provider_services (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   provider_id UUID NOT NULL REFERENCES public.provider_profiles(id) ON DELETE CASCADE,
   category_id UUID NOT NULL REFERENCES public.categories(id),
   title TEXT NOT NULL,
@@ -104,7 +101,7 @@ CREATE INDEX idx_provider_services_is_active ON public.provider_services(is_acti
 -- 5. PROVIDER_GALLERY - Images for providers
 -- ============================================================================
 CREATE TABLE public.provider_gallery (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   provider_id UUID NOT NULL REFERENCES public.provider_profiles(id) ON DELETE CASCADE,
   image_url TEXT NOT NULL,
   caption TEXT,
@@ -118,7 +115,7 @@ CREATE INDEX idx_provider_gallery_provider_id ON public.provider_gallery(provide
 -- 6. PROVIDER_AVAILABILITY - Provider calendar
 -- ============================================================================
 CREATE TABLE public.provider_availability (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   provider_id UUID NOT NULL REFERENCES public.provider_profiles(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   start_time TIME,
@@ -135,7 +132,7 @@ CREATE INDEX idx_provider_availability_date ON public.provider_availability(date
 -- 7. INQUIRIES - Customer inquiries to providers
 -- ============================================================================
 CREATE TABLE public.inquiries (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   provider_id UUID NOT NULL REFERENCES public.provider_profiles(id) ON DELETE CASCADE,
   service_id UUID REFERENCES public.provider_services(id) ON DELETE SET NULL,
@@ -158,7 +155,7 @@ CREATE INDEX idx_inquiries_status ON public.inquiries(status);
 -- 8. BOOKINGS - Confirmed bookings
 -- ============================================================================
 CREATE TABLE public.bookings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   provider_id UUID NOT NULL REFERENCES public.provider_profiles(id) ON DELETE CASCADE,
   service_id UUID REFERENCES public.provider_services(id) ON DELETE SET NULL,
@@ -183,7 +180,7 @@ CREATE INDEX idx_bookings_status ON public.bookings(status);
 -- 9. REVIEWS - Customer reviews
 -- ============================================================================
 CREATE TABLE public.reviews (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   provider_id UUID NOT NULL REFERENCES public.provider_profiles(id) ON DELETE CASCADE,
   booking_id UUID NOT NULL UNIQUE REFERENCES public.bookings(id) ON DELETE CASCADE,
@@ -203,7 +200,7 @@ CREATE INDEX idx_reviews_is_verified ON public.reviews(is_verified);
 -- 10. FAVORITES - Saved providers
 -- ============================================================================
 CREATE TABLE public.favorites (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   provider_id UUID NOT NULL REFERENCES public.provider_profiles(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -217,7 +214,7 @@ CREATE INDEX idx_favorites_provider_id ON public.favorites(provider_id);
 -- 11. SUBSCRIPTIONS - Provider subscription plans
 -- ============================================================================
 CREATE TABLE public.subscriptions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   provider_id UUID NOT NULL UNIQUE REFERENCES public.provider_profiles(id) ON DELETE CASCADE,
   plan_name TEXT NOT NULL,
   price DECIMAL(10, 2),
@@ -237,7 +234,7 @@ CREATE INDEX idx_subscriptions_status ON public.subscriptions(status);
 -- 12. NOTIFICATIONS - User notifications
 -- ============================================================================
 CREATE TABLE public.notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   message TEXT,
@@ -255,7 +252,7 @@ CREATE INDEX idx_notifications_is_read ON public.notifications(is_read);
 -- 13. CONVERSATIONS - Messaging between customers and providers
 -- ============================================================================
 CREATE TABLE public.conversations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   provider_id UUID NOT NULL REFERENCES public.provider_profiles(id) ON DELETE CASCADE,
   inquiry_id UUID REFERENCES public.inquiries(id) ON DELETE SET NULL,
@@ -271,7 +268,7 @@ CREATE INDEX idx_conversations_inquiry_id ON public.conversations(inquiry_id);
 -- 14. MESSAGES - Individual messages in conversations
 -- ============================================================================
 CREATE TABLE public.messages (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   conversation_id UUID NOT NULL REFERENCES public.conversations(id) ON DELETE CASCADE,
   sender_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   message TEXT NOT NULL,
@@ -286,7 +283,7 @@ CREATE INDEX idx_messages_sender_id ON public.messages(sender_id);
 -- 15. CONTACT_MESSAGES - Public contact form submissions
 -- ============================================================================
 CREATE TABLE public.contact_messages (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   email TEXT NOT NULL,
   subject TEXT NOT NULL,
@@ -301,7 +298,7 @@ CREATE INDEX idx_contact_messages_status ON public.contact_messages(status);
 -- 16. AI_EVENT_PLANS - Future AI event planning feature
 -- ============================================================================
 CREATE TABLE public.ai_event_plans (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   event_type TEXT NOT NULL,
   event_date DATE,
@@ -414,7 +411,7 @@ CREATE POLICY "Public profiles are viewable by everyone"
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id AND role = OLD.role);
+  WITH CHECK (auth.uid() = id);
 
 -- ============================================================================
 -- RLS POLICIES - CATEGORIES
@@ -698,3 +695,4 @@ CREATE POLICY "Users can manage their own AI event plans"
   ON public.ai_event_plans FOR ALL
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
+
