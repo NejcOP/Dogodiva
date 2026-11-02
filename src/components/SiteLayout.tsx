@@ -224,7 +224,7 @@ function Header() {
                   <span className="profile-name">
                     {profile.first_name && profile.last_name 
                       ? `${profile.first_name} ${profile.last_name}` 
-                      : user.email}
+                      : (user.user_metadata?.full_name || user.email?.split('@')[0])}
                   </span>
                   <ChevronDown size={16} />
                 </button>
