@@ -45,7 +45,17 @@ export function useAuth() {
     };
   }, []);
 
-  return { user, profile, loading, error };
+  const logout = async () => {
+    try {
+      await authService.signOut();
+      setUser(null);
+      setProfile(null);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Logout error'));
+    }
+  };
+
+  return { user, profile, loading, error, logout };
 }
 
 export function useUser() {

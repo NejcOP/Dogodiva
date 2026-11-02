@@ -34,7 +34,7 @@ function Header() {
   const [exploreOpen, setExploreOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user, userProfile, logout } = useAuth();
+  const { user, profile, logout } = useAuth();
   const dropdownTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const profileTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -81,7 +81,6 @@ function Header() {
     setProfileOpen(false);
     closeMenu();
   };
-
   const handleDropdownMouseLeave = () => {
     dropdownTimeoutRef.current = setTimeout(() => {
       setExploreOpen(false);
@@ -203,7 +202,7 @@ function Header() {
             Postani ponudnik
           </Link>
           <div className="nav-actions">
-            {user && userProfile ? (
+            {user && profile ? (
               <div 
                 className="profile-menu"
                 onMouseEnter={handleProfileMouseEnter}
@@ -215,14 +214,18 @@ function Header() {
                   aria-expanded={profileOpen}
                   aria-haspopup="true"
                 >
-                  {userProfile.avatar_url && (
+                  {profile.avatar_url && (
                     <img 
-                      src={userProfile.avatar_url} 
-                      alt={userProfile.full_name || 'Profil'} 
+                      src={profile.avatar_url} 
+                      alt={profile.first_name || 'Profil'} 
                       className="profile-avatar"
                     />
                   )}
-                  <span className="profile-name">{userProfile.full_name || user.email}</span>
+                  <span className="profile-name">
+                    {profile.first_name && profile.last_name 
+                      ? `${profile.first_name} ${profile.last_name}` 
+                      : user.email}
+                  </span>
                   <ChevronDown size={16} />
                 </button>
                 {profileOpen && (
