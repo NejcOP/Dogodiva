@@ -1,131 +1,102 @@
 import { supabase } from '../lib/supabase';
 import type { Database } from '../types/supabase';
 
-type ProviderApplication = Database['public']['Tables']['provider_applications']['Row'];
-type ProviderApplicationInsert = Database['public']['Tables']['provider_applications']['Insert'];
+export type ProviderApplication = Database['public']['Tables']['provider_applications']['Row'];
+
+type ProviderApplicationInput = {
+  businessName: string;
+  contactPerson: string;
+  email: string;
+  phone: string;
+  categoryId: string;
+  city: string;
+  region: string;
+  website: string | null;
+  description: string;
+  termsAccepted: boolean;
+};
 
 export const providerApplicationService = {
-  /**
-   * Submit a new provider application
-   */
-  async submitApplication(data: ProviderApplicationInsert) {
-    if (!supabase) throw new Error('Supabase not configured');
+  async submitApplication(input: ProviderApplicationInput) {
+    if (!supabase) throw new Error('Supabase ni konfiguriran.');
 
-    const { data: result, error } = await supabase
-      .from('provider_applications')
-      .insert([data])
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc('submit_provider_application', {
+      p_business_name: input.businessName,
+      p_contact_person: input.contactPerson,
+      p_email: input.email,
+      p_phone: input.phone,
+      p_category_id: input.categoryId,
+      p_city: input.city,
+      p_region: input.region,
+      p_website: input.website,
+      p_description: input.description,
+      p_terms_accepted: input.termsAccepted,
+    });
 
     if (error) throw error;
-    return result as ProviderApplication;
+    return data;
   },
 
-  /**
-   * Get user's own applications
-   */
-  async getUserApplications(userId: string) {
-    if (!supabase) throw new Error('Supabase not configured');
+  async getCurrentApplication() {
+    if (!supabase) throw new Error('Supabase ni konfiguriran.');
 
+    const { data: session } = await supabase.auth.getSession();
+    if (!session.session?.user) return null;
+
+    const { data: claimed, error: claimError } = await supabase.rpc('claim_provider_applications');
+    if (claimError) throw claimError;
+
+    return (claimed?.[0] ?? null) as ProviderApplication | null;
+  },
+
+  async getUserApplications(userId: string) {
+    if (!supabase) throw new Error('Supabase ni konfiguriran.');
     const { data, error } = await supabase
       .from('provider_applications')
       .select('*')
-      .eq('submitted_by', userId)
+      .or(`user_id.eq.${userId},submitted_by.eq.${userId}`)
       .order('created_at', { ascending: false });
-
     if (error) throw error;
-    return data as ProviderApplication[];
+    return data;
   },
 
-  /**
-   * Get single application by ID (for user)
-   */
   async getApplication(applicationId: string) {
-    if (!supabase) throw new Error('Supabase not configured');
-
+    if (!supabase) throw new Error('Supabase ni konfiguriran.');
     const { data, error } = await supabase
       .from('provider_applications')
       .select('*')
       .eq('id', applicationId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') throw error;
-    return data as ProviderApplication | null;
-  },
-
-  /**
-   * Check if user already has a pending/approved application
-   */
-  async checkExistingApplication(email: string) {
-    if (!supabase) throw new Error('Supabase not configured');
-
-    const { data, error } = await supabase
-      .from('provider_applications')
-      .select('id, status')
-      .eq('email', email)
-      .in('status', ['pending', 'approved'])
-      .single();
-
-    if (error && error.code !== 'PGRST116') throw error;
+      .maybeSingle();
+    if (error) throw error;
     return data;
   },
 };
 
 export const providerApplicationAdminService = {
-  /**
-   * Get all applications (admin only)
-   */
   async getAllApplications(filters?: { status?: string; category_id?: string }) {
-    if (!supabase) throw new Error('Supabase not configured');
-
+    if (!supabase) throw new Error('Supabase ni konfiguriran.');
     let query = supabase.from('provider_applications').select('*');
-
-    if (filters?.status) {
-      query = query.eq('status', filters.status);
-    }
-    if (filters?.category_id) {
-      query = query.eq('category_id', filters.category_id);
-    }
-
+    if (filters?.status) query = query.eq('status', filters.status);
+    if (filters?.category_id) query = query.eq('category_id', filters.category_id);
     const { data, error } = await query.order('created_at', { ascending: false });
     if (error) throw error;
-    return data as ProviderApplication[];
+    return data;
   },
 
-  /**
-   * Approve an application
-   */
   async approveApplication(applicationId: string, reviewNotes?: string) {
-    if (!supabase) throw new Error('Supabase not configured');
-
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) throw new Error('Not authenticated');
-
-    const { data, error } = await supabase
-      .from('provider_applications')
-      .update({
-        status: 'approved',
-        reviewed_by: user.user.id,
-        review_notes: reviewNotes,
-        reviewed_at: new Date().toISOString(),
-      })
-      .eq('id', applicationId)
-      .select()
-      .single();
-
+    if (!supabase) throw new Error('Supabase ni konfiguriran.');
+    const { data, error } = await supabase.rpc('approve_provider_application', {
+      p_application_id: applicationId,
+      p_review_notes: reviewNotes ?? null,
+    });
     if (error) throw error;
-    return data as ProviderApplication;
+    return data;
   },
 
-  /**
-   * Reject an application
-   */
   async rejectApplication(applicationId: string, reviewNotes: string) {
-    if (!supabase) throw new Error('Supabase not configured');
-
+    if (!supabase) throw new Error('Supabase ni konfiguriran.');
     const { data: user } = await supabase.auth.getUser();
-    if (!user.user) throw new Error('Not authenticated');
-
+    if (!user.user) throw new Error('Prijavite se kot administrator.');
     const { data, error } = await supabase
       .from('provider_applications')
       .update({
@@ -137,8 +108,7 @@ export const providerApplicationAdminService = {
       .eq('id', applicationId)
       .select()
       .single();
-
     if (error) throw error;
-    return data as ProviderApplication;
+    return data;
   },
 };

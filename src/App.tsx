@@ -28,6 +28,7 @@ export default function App() {
         <Route path="o-nas" element={<InfoPage page="about" />} />
         <Route path="kontakt" element={<InfoPage page="contact" />} />
         <Route path="pogoji" element={<InfoPage page="terms" />} />
+        <Route path="pogoji-za-ponudnike" element={<InfoPage page="provider-terms" />} />
         <Route path="zasebnost" element={<InfoPage page="privacy" />} />
         <Route path="404" element={<NotFoundPage />} />
         <Route path="*" element={<NotFoundPage />} />

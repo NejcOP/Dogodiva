@@ -1,28 +1,72 @@
-import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, Store } from 'lucide-react';
-import { categories } from '../data/categories';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, BadgeCheck, CheckCircle2, Clock3, LockKeyhole, Mail, Store } from 'lucide-react';
+import { useCategories } from '../hooks/useData';
 import { usePageMeta } from '../lib/seo';
 import { useAuth } from '../hooks/useAuth';
-import { providerApplicationService } from '../services/providerApplicationService';
+import { authService } from '../services/auth';
+import {
+  providerApplicationService,
+  type ProviderApplication,
+} from '../services/providerApplicationService';
 
-type InfoPageProps = { page: 'become-provider' | 'about' | 'contact' | 'terms' | 'privacy' };
+type InfoPageProps = {
+  page: 'become-provider' | 'about' | 'contact' | 'terms' | 'provider-terms' | 'privacy';
+};
 
 const pageMeta = {
   'become-provider': ['Postani ponudnik', 'Predstavi svojo storitev ljudem, ki načrtujejo svoj naslednji dogodek.'],
   about: ['O nas', 'Spoznaj idejo in namen platforme Događive.'],
   contact: ['Kontakt', 'Piši ekipi Dogodive.'],
   terms: ['Pogoji uporabe', 'Osnovna pojasnila za predstavitveno različico platforme Dogodiva.'],
+  'provider-terms': ['Pogoji za ponudnike', 'Pogoji sodelovanja in ustanovna ugodnost za ponudnike Dogodive.'],
   privacy: ['Zasebnost', 'Kako ravnamo s podatki v predstavitveni različici Dogodive.'],
 } as const;
 
 export default function InfoPage({ page }: InfoPageProps) {
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { categories, loading: categoriesLoading, error: categoriesError } = useCategories();
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isApplicationLoading, setIsApplicationLoading] = useState(false);
+  const [application, setApplication] = useState<ProviderApplication | null>(null);
+  const [accountMode, setAccountMode] = useState<'create' | 'later'>('create');
   usePageMeta(pageMeta[page][0], pageMeta[page][1]);
+
+  useEffect(() => {
+    if (page !== 'become-provider' || authLoading || !user) return;
+    let cancelled = false;
+    setIsApplicationLoading(true);
+    setError('');
+
+    providerApplicationService.getCurrentApplication()
+      .then((currentApplication) => {
+        if (!cancelled) {
+          const activeApplication = currentApplication &&
+            (currentApplication.status === 'pending' || currentApplication.status === 'approved')
+              ? currentApplication
+              : null;
+          setApplication(activeApplication);
+        }
+      })
+      .catch((applicationError) => {
+        if (!cancelled) {
+          setError(
+            applicationError instanceof Error
+              ? applicationError.message
+              : 'Prijave ni bilo mogoče preveriti.',
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsApplicationLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, page, user]);
 
   async function handleProviderSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,51 +82,41 @@ export default function InfoPage({ page }: InfoPageProps) {
       const phone = String(form.get('phone') ?? '').trim();
       const categoryId = String(form.get('category') ?? '').trim();
       const city = String(form.get('city') ?? '').trim();
+      const region = String(form.get('region') ?? '').trim();
       const website = String(form.get('website') ?? '').trim() || null;
       const description = String(form.get('description') ?? '').trim() || null;
+      const termsAccepted = form.get('terms') === 'on';
+      const password = String(form.get('password') ?? '');
+      const confirmPassword = String(form.get('confirmPassword') ?? '');
+      let accountCreatedWithoutSession = false;
 
-      // Basic validation
-      if (!businessName || !contactPerson || !email || !phone || !categoryId || !city) {
-        setError('Vsa polja so obvezna.');
-        setIsSubmitting(false);
-        return;
+      if (!user && accountMode === 'create') {
+        if (password.length < 8 || password !== confirmPassword) {
+          throw new Error('Geslo mora imeti najmanj 8 znakov in se mora ujemati s potrditvijo.');
+        }
+        const signUpResult = await authService.signUp(email, password, contactPerson);
+        accountCreatedWithoutSession = Boolean(signUpResult.user && !signUpResult.session);
       }
 
-      // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        setError('Prosim vnesi veljaven e-naslov.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Check for existing application
-      const existing = await providerApplicationService.checkExistingApplication(email);
-      if (existing) {
-        setError(`Že imaš prijavljeno application s statusom: ${existing.status}`);
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Submit application
-      await providerApplicationService.submitApplication({
-        business_name: businessName,
-        contact_person: contactPerson,
+      const submitted = await providerApplicationService.submitApplication({
+        businessName,
+        contactPerson,
         email,
         phone,
-        category_id: categoryId,
+        categoryId,
         city,
+        region,
         website,
-        description,
-        submitted_by: user?.id || null,
+        description: description ?? '',
+        termsAccepted,
       });
 
-      setNotice('✓ Prijava je bila uspešno poslana! V kratkem te bomo kontaktirali.');
-      (event.target as HTMLFormElement).reset();
-      
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
+      setApplication(submitted);
+      setNotice(
+        accountCreatedWithoutSession
+          ? 'Vaša prijava je v pregledu. Na e-pošto smo poslali potrditveno sporočilo; prijava se bo po potrditvi računa samodejno povezala.'
+          : 'Vaša prijava je v pregledu. Po potrditvi boste prejeli dostop do nadzorne plošče ponudnika.',
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Prišlo je do napake. Poskusi znova.');
     } finally {
@@ -99,29 +133,87 @@ export default function InfoPage({ page }: InfoPageProps) {
   }
 
   if (page === 'become-provider') {
+    const applicationCategory = categories.find((category) => category.id === application?.category_id);
+    if (isApplicationLoading || authLoading) {
+      return (
+        <section className="info-page provider-signup-page">
+          <div className="container provider-application-loading">Preverjam prijavo ponudnika …</div>
+        </section>
+      );
+    }
+
+    if (application) {
+      const isApproved = application.status === 'approved';
+      return (
+        <section className="info-page provider-signup-page">
+          <div className="container provider-application-status-wrap">
+            <div className="provider-application-status">
+              <span className={`provider-status-icon ${isApproved ? 'is-approved' : ''}`}>
+                {isApproved ? <BadgeCheck size={30} /> : <Clock3 size={30} />}
+              </span>
+              <span className="eyebrow">{isApproved ? 'Dobrodošli med ponudnike' : 'Prijava uspešno oddana'}</span>
+              <h1>{isApproved ? 'Vaša prijava je potrjena.' : 'Vaša prijava je v pregledu.'}</h1>
+              <p>
+                {isApproved
+                  ? 'Po potrditvi imate dostop do nadzorne plošče ponudnika in povpraševanj strank.'
+                  : 'Ekipa Dogodive bo podatke pregledala. Po potrditvi boste prejeli dostop do nadzorne plošče ponudnika.'}
+              </p>
+              <div className="provider-status-details">
+                <div><span>Podjetje</span><strong>{application.business_name}</strong></div>
+                <div><span>Kategorija</span><strong>{applicationCategory?.name || 'Izbrana kategorija'}</strong></div>
+                <div><span>Status</span><strong>{isApproved ? 'Odobreno' : 'V pregledu'}</strong></div>
+                <div><span>Oddano</span><strong>{new Date(application.created_at).toLocaleDateString('sl-SI')}</strong></div>
+              </div>
+              {isApproved && application.founding_partner_number && (
+                <div className="founding-partner-confirmed">
+                  <BadgeCheck size={18} />
+                  Ustanovni partner #{application.founding_partner_number} — 6 mesecev najvišjega paketa brezplačno.
+                </div>
+              )}
+              {isApproved ? (
+                <Link className="button button-primary" to="/povprasevanja">
+                  Odpri nadzorno ploščo ponudnika <ArrowRight size={16} />
+                </Link>
+              ) : (
+                <div className="provider-status-next">
+                  <Mail size={18} />
+                  O rezultatu vas bomo obvestili na {application.email}.
+                </div>
+              )}
+              {notice && <p className="form-success" role="status">{notice}</p>}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
     return (
       <section className="info-page provider-signup-page">
         <div className="container info-layout">
           <div className="info-copy">
             <span className="eyebrow"><Store size={14} /> Za ponudnike</span>
-            <h1>Naj te najdejo ljudje, ki načrtujejo nekaj posebnega.</h1>
+            <h1>Postani eden prvih 50 ustanovnih partnerjev Dogodive.</h1>
             <p>
-              Događiva nastaja kot prostor za povezovanje organizatorjev dogodkov
-              s ponudniki po Sloveniji. Prvi korak je predstavitev tvoje storitve.
+              Predstavi svojo storitev organizatorjem dogodkov in prejmi povpraševanja
+              neposredno na platformi.
             </p>
             <div className="benefit-list">
-              <span><CheckCircle2 size={18} /> Predstavi svoje storitve in območje delovanja</span>
-              <span><CheckCircle2 size={18} /> Pokaži fotografije in okvirne cene</span>
-              <span><CheckCircle2 size={18} /> Začni pogovor z bodočimi strankami</span>
+              <span><CheckCircle2 size={18} /> Prvi odobreni ponudniki prejmejo 6 mesecev najvišjega paketa brezplačno</span>
+              <span><CheckCircle2 size={18} /> Dostop do javnih povpraševanj in neposrednih ponudb strankam</span>
+              <span><CheckCircle2 size={18} /> Profesionalen profil, storitve, galerija in nadzor nad razpoložljivostjo</span>
+            </div>
+            <div className="provider-founder-note">
+              <BadgeCheck size={20} />
+              <span><strong>Ustanovna ugodnost</strong>Največ 50 partnerjev. Uvrstitev je dokončna ob potrditvi prijave.</span>
             </div>
           </div>
           <div className="inquiry-card provider-lead-card">
-            <span className="eyebrow">Izrazi zanimanje</span>
-            <h2>Predstavi svojo storitev</h2>
+            <span className="eyebrow">Prijava ustanovnega partnerja</span>
+            <h2>Predstavite svojo storitev</h2>
             <form className="inquiry-form" onSubmit={handleProviderSubmit}>
               <label>
-                Ime podjetja ali dejavnosti
-                <input name="business" minLength={2} required />
+                Ime podjetja / blagovna znamka
+                <input name="business" minLength={2} required placeholder="Npr. Studio Luma" />
               </label>
               <label>
                 Kontaktna oseba
@@ -129,35 +221,73 @@ export default function InfoPage({ page }: InfoPageProps) {
               </label>
               <label>
                 E-naslov
-                <input type="email" name="email" autoComplete="email" required />
+                <input type="email" name="email" autoComplete="email" required defaultValue={user?.email ?? ''} readOnly={Boolean(user)} />
               </label>
               <label>
                 Telefonska številka
-                <input type="tel" name="phone" required />
+                <input type="tel" name="phone" required minLength={6} autoComplete="tel" placeholder="+386 40 123 456" />
               </label>
               <label>
                 Mesto
-                <input name="city" minLength={2} required />
+                <input name="city" minLength={2} required placeholder="Npr. Ljubljana" />
               </label>
               <label>
-                Kategorija dejavnosti
-                <select name="category" required defaultValue="">
-                  <option value="" disabled>Izberi kategorijo</option>
+                Regija
+                <input name="region" minLength={2} required placeholder="Npr. Osrednjeslovenska" />
+              </label>
+              <label>
+                Glavna kategorija
+                <select name="category" required defaultValue="" disabled={categoriesLoading || Boolean(categoriesError)}>
+                  <option value="" disabled>
+                    {categoriesLoading ? 'Nalagam kategorije …' : 'Izberi kategorijo'}
+                  </option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>{category.name}</option>
                   ))}
                 </select>
+                {categoriesError && <small>V kategorijah je nastala napaka. Osveži stran in poskusi znova.</small>}
               </label>
               <label>
-                Spletna stran (opciono)
-                <input type="url" name="website" placeholder="https://..." />
+                Spletna stran ali Instagram (neobvezno)
+                <input name="website" placeholder="https://… ali @uporabnisko_ime" />
               </label>
               <label>
-                Kratek opis dejavnosti (opciono)
-                <textarea name="description" rows={3} placeholder="Kaj te naredi edinstvene?" />
+                Kratek opis storitev
+                <textarea name="description" rows={4} minLength={20} maxLength={1200} required placeholder="Katere storitve ponujate, za katere dogodke in kaj vas naredi posebne?" />
               </label>
-              <button className="button button-primary button-full" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Pošiljam prijavo…' : 'Oddaj zanimanje'} <ArrowRight size={16} />
+              {!user && (
+                <div className="provider-account-choice">
+                  <span>Kako želite upravljati prijavo?</span>
+                  <div className="provider-account-options">
+                    <label>
+                      <input type="radio" name="accountMode" value="create" checked={accountMode === 'create'} onChange={() => setAccountMode('create')} />
+                      <span><LockKeyhole size={17} /><strong>Ustvari račun zdaj</strong><small>Za dostop do statusa in kasnejše nadzorne plošče.</small></span>
+                    </label>
+                    <label>
+                      <input type="radio" name="accountMode" value="later" checked={accountMode === 'later'} onChange={() => setAccountMode('later')} />
+                      <span><Mail size={17} /><strong>Registriraj se pozneje</strong><small>Oddaj prijavo in jo po registraciji poveži po e-naslovu.</small></span>
+                    </label>
+                  </div>
+                  {accountMode === 'create' && (
+                    <div className="provider-password-fields">
+                      <label>Geslo
+                        <input type="password" name="password" minLength={8} autoComplete="new-password" required placeholder="Najmanj 8 znakov" />
+                      </label>
+                      <label>Potrdi geslo
+                        <input type="password" name="confirmPassword" minLength={8} autoComplete="new-password" required placeholder="Ponovi geslo" />
+                      </label>
+                    </div>
+                  )}
+                </div>
+              )}
+              <label className="provider-terms-check">
+                <input type="checkbox" name="terms" required />
+                <span>
+                  Strinjam se s <Link to="/pogoji-za-ponudnike" target="_blank">Pogoji za ponudnike</Link> in potrjujem, da sem prebral/a ustanovno ugodnost za prvih 50 potrjenih partnerjev.
+                </span>
+              </label>
+              <button className="button button-primary button-full" type="submit" disabled={isSubmitting || categoriesLoading}>
+                {isSubmitting ? 'Pošiljam prijavo …' : 'Oddaj prijavo'} <ArrowRight size={16} />
               </button>
               {error && <p className="form-error" role="alert">{error}</p>}
               {notice && <p className="form-success" role="status">{notice}</p>}
@@ -188,6 +318,27 @@ export default function InfoPage({ page }: InfoPageProps) {
               <p className="form-footnote">Predstavitveni obrazec: sporočila se ne pošiljajo.</p>
             </form>
           </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (page === 'provider-terms') {
+    return (
+      <section className="info-page">
+        <div className="container narrow-content legal-content">
+          <span className="eyebrow">Za ustanovne partnerje</span>
+          <h1>Pogoji za ponudnike</h1>
+          <p>Dogodiva povezuje stranke in ponudnike storitev za dogodke. Ponudnik odgovarja za točnost podatkov, razpoložljivost in kakovost storitev, ki jih objavi ali ponudi.</p>
+          <h2>Ustanovna ugodnost</h2>
+          <p>Prvih 50 potrjenih ponudnikov prejme 6 mesecev najvišjega paketa brez plačila naročnine. Uvrstitev med ustanovne partnerje je dokončna ob odobritvi prijave in se ne rezervira z oddajo obrazca.</p>
+          <h2>Pregled in dostop</h2>
+          <p>Vsaka prijava je predmet pregleda. Dogodiva lahko zahteva dodatne podatke, zavrne prijavo ali začasno odstrani profil, ki vsebuje netočne, zavajajoče ali neprimerne vsebine.</p>
+          <h2>Povpraševanja in komunikacija</h2>
+          <p>Ponudniki lahko odgovarjajo na povpraševanja in pošiljajo ponudbe. Kontaktni podatki stranke se razkrijejo šele, ko ta ponudbo sprejme. Sporočila in ponudbe se uporabljajo izključno za namen organizacije dogodka.</p>
+          <h2>Varovanje podatkov</h2>
+          <p>Podatki prijave se uporabljajo za oceno, vzpostavitev profila in poslovno komunikacijo. Podrobnosti o obdelavi so opisane v obvestilu o zasebnosti Dogodive.</p>
+          <Link className="button button-primary" to="/postani-ponudnik">Nazaj na prijavo ponudnika</Link>
         </div>
       </section>
     );

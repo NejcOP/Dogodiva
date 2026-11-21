@@ -644,6 +644,10 @@ export interface Database {
           city: string;
           website: string | null;
           description: string | null;
+          region: string | null;
+          terms_accepted_at: string | null;
+          founding_partner_number: number | null;
+          user_id: string | null;
           status: 'pending' | 'approved' | 'rejected';
           submitted_by: string | null;
           reviewed_by: string | null;
@@ -662,6 +666,10 @@ export interface Database {
           city: string;
           website?: string | null;
           description?: string | null;
+          region?: string | null;
+          terms_accepted_at?: string | null;
+          founding_partner_number?: number | null;
+          user_id?: string | null;
           status?: 'pending' | 'approved' | 'rejected';
           submitted_by?: string | null;
           reviewed_by?: string | null;
@@ -680,6 +688,10 @@ export interface Database {
           city?: string;
           website?: string | null;
           description?: string | null;
+          region?: string | null;
+          terms_accepted_at?: string | null;
+          founding_partner_number?: number | null;
+          user_id?: string | null;
           status?: 'pending' | 'approved' | 'rejected';
           submitted_by?: string | null;
           reviewed_by?: string | null;
@@ -808,6 +820,29 @@ export interface Database {
       accept_marketplace_offer: {
         Args: { p_offer_id: string };
         Returns: Database['public']['Tables']['marketplace_requests']['Row'];
+      };
+      submit_provider_application: {
+        Args: {
+          p_business_name: string;
+          p_contact_person: string;
+          p_email: string;
+          p_phone: string;
+          p_category_id: string;
+          p_city: string;
+          p_region: string;
+          p_website: string | null;
+          p_description: string;
+          p_terms_accepted: boolean;
+        };
+        Returns: Database['public']['Tables']['provider_applications']['Row'];
+      };
+      claim_provider_applications: {
+        Args: Record<string, never>;
+        Returns: Database['public']['Tables']['provider_applications']['Row'][];
+      };
+      approve_provider_application: {
+        Args: { p_application_id: string; p_review_notes?: string | null };
+        Returns: Database['public']['Tables']['provider_applications']['Row'];
       };
     };
     Enums: {
