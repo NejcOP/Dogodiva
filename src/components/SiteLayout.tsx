@@ -203,14 +203,24 @@ function Header() {
             Postani ponudnik
           </Link>
           {profile?.role === 'provider' && (
-            <NavLink
-              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-              to="/povprasevanja"
-              onClick={closeMenu}
-            >
-              <MessageSquareText size={16} />
-              Povpraševanja strank
-            </NavLink>
+            <>
+              <NavLink
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                to="/povprasevanja"
+                onClick={closeMenu}
+              >
+                <MessageSquareText size={16} />
+                Povpraševanja strank
+              </NavLink>
+              <NavLink
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                to="/ponudnik-nadzorna-plosca"
+                onClick={closeMenu}
+              >
+                <CalendarHeart size={16} />
+                Nadzorna plošča ponudnika
+              </NavLink>
+            </>
           )}
           <div className="nav-actions">
             {user && profile ? (
@@ -251,6 +261,18 @@ function Header() {
                     >
                       Moj profil
                     </Link>
+                    {profile.role === 'provider' && (
+                      <Link
+                        to="/ponudnik-nadzorna-plosca"
+                        className="profile-menu-item"
+                        onClick={() => {
+                          setProfileOpen(false);
+                          closeMenu();
+                        }}
+                      >
+                        Nadzorna plošča ponudnika
+                      </Link>
+                    )}
                     {profile.role === 'admin' && (
                       <Link
                         to="/admin"

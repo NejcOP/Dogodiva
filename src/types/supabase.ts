@@ -120,6 +120,12 @@ export interface Database {
           verification_status: 'unverified' | 'pending' | 'verified' | 'rejected';
           subscription_plan: 'basic' | 'premium' | 'business';
           region: string | null;
+          main_category_id: string | null;
+          service_areas: string[];
+          detailed_description: string | null;
+          instagram: string | null;
+          facebook: string | null;
+          starting_price: number | null;
           subscription_status: 'active' | 'inactive' | 'cancelled';
           average_rating: number;
           total_reviews: number;
@@ -146,6 +152,12 @@ export interface Database {
           verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected';
           subscription_plan?: 'basic' | 'premium' | 'business';
           region?: string | null;
+          main_category_id?: string | null;
+          service_areas?: string[];
+          detailed_description?: string | null;
+          instagram?: string | null;
+          facebook?: string | null;
+          starting_price?: number | null;
           subscription_status?: 'active' | 'inactive' | 'cancelled';
           average_rating?: number;
           total_reviews?: number;
@@ -172,6 +184,12 @@ export interface Database {
           verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected';
           subscription_plan?: 'basic' | 'premium' | 'business';
           region?: string | null;
+          main_category_id?: string | null;
+          service_areas?: string[];
+          detailed_description?: string | null;
+          instagram?: string | null;
+          facebook?: string | null;
+          starting_price?: number | null;
           subscription_status?: 'active' | 'inactive' | 'cancelled';
           average_rating?: number;
           total_reviews?: number;
@@ -280,6 +298,26 @@ export interface Database {
           end_time?: string | null;
           status?: 'available' | 'booked' | 'unavailable';
           notes?: string | null;
+          created_at?: string;
+        };
+      };
+      provider_unavailable_dates: {
+        Row: {
+          id: string;
+          provider_id: string;
+          unavailable_date: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          provider_id: string;
+          unavailable_date: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          provider_id?: string;
+          unavailable_date?: string;
           created_at?: string;
         };
       };

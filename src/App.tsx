@@ -11,6 +11,7 @@ import ProviderProfilePage from './pages/ProviderProfilePage';
 import ProvidersPage from './pages/ProvidersPage';
 import RequestBoardPage from './pages/RequestBoardPage';
 import AdminPage from './pages/AdminPage';
+import ProviderDashboardPage from './pages/ProviderDashboardPage';
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="profil" element={<ProfilePage />} />
         <Route path="povprasevanja" element={<RequestBoardPage />} />
         <Route path="admin" element={<AdminPage />} />
+        <Route path="ponudnik-nadzorna-plosca" element={<ProviderDashboardPage />} />
         <Route path="organiziraj-dogodek" element={<OrganizeEventPage />} />
         <Route path="kategorije/maturantski-plesi" element={<GraduationPage />} />
         <Route path="prijava" element={<AuthPage mode="login" />} />

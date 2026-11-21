@@ -49,7 +49,7 @@ export const providerService = {
     if (!supabase) throw new Error('Supabase not configured');
     let query = supabase
       .from('provider_profiles')
-      .select('*, provider_services(*, categories(*)), provider_gallery(*)')
+      .select('*, provider_services(*, categories(*)), provider_gallery(*), provider_unavailable_dates(*)')
       .eq('is_active', true);
 
     if (filters?.city) {
@@ -76,7 +76,8 @@ export const providerService = {
           categories(*)
         ),
         provider_gallery(*),
-        provider_availability(*)
+        provider_availability(*),
+        provider_unavailable_dates(*)
       `
       )
       .eq('id', id)
@@ -101,6 +102,7 @@ export const providerService = {
         ),
         provider_gallery(*),
         provider_availability(*),
+        provider_unavailable_dates(*),
         reviews(id, rating, comment, is_verified)
       `
       )

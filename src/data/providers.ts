@@ -13,6 +13,9 @@ export type Provider = {
   tags: string[];
   guestCapacity?: number;
   demoAvailabilityDates: string[];
+  isDatabaseProvider?: boolean;
+  unavailableDates?: string[];
+  categoryName?: string;
 };
 
 const photo = (id: string, width = 1200) =>

@@ -99,4 +99,10 @@ export const storageService = {
     const { error } = await supabase.storage.from(bucket).remove([path]);
     if (error) throw error;
   },
+
+  getStoragePath(publicUrl: string, bucket: string) {
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const index = publicUrl.indexOf(marker);
+    return index >= 0 ? publicUrl.slice(index + marker.length) : null;
+  },
 };

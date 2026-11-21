@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowDownWideNarrow, SlidersHorizontal, X } from 'lucide-react';
 import ProviderCard from '../components/ProviderCard';
@@ -6,6 +6,16 @@ import SearchForm from '../components/SearchForm';
 import { categories } from '../data/categories';
 import { providers } from '../data/providers';
 import { usePageMeta } from '../lib/seo';
+import { providerService } from '../services/database';
+import type { Database } from '../types/supabase';
+
+type PublicProvider = Database['public']['Tables']['provider_profiles']['Row'] & {
+  provider_services: (Database['public']['Tables']['provider_services']['Row'] & {
+    categories: Database['public']['Tables']['categories']['Row'] | null;
+  })[];
+  provider_gallery: Database['public']['Tables']['provider_gallery']['Row'][];
+  provider_unavailable_dates: Database['public']['Tables']['provider_unavailable_dates']['Row'][];
+};
 
 export default function ProvidersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -13,12 +23,27 @@ export default function ProvidersPage() {
   const [minPrice, setMinPrice] = useState(searchParams.get('minCena') ?? '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxCena') ?? '');
   const [sort, setSort] = useState(searchParams.get('sort') ?? 'priporoceno');
+  const [databaseProviders, setDatabaseProviders] = useState<PublicProvider[]>([]);
   const category = searchParams.get('kategorija') ?? '';
   const eventType = searchParams.get('dogodek') ?? '';
   const location = searchParams.get('lokacija') ?? '';
   const date = searchParams.get('datum') ?? '';
   const guests = Number(searchParams.get('gosti') ?? '');
   const searchTerm = searchParams.get('iskanje')?.trim().toLocaleLowerCase('sl-SI') ?? '';
+
+  useEffect(() => {
+    let cancelled = false;
+    providerService.getAll()
+      .then((rows) => {
+        if (!cancelled) setDatabaseProviders(rows as PublicProvider[]);
+      })
+      .catch(() => {
+        if (!cancelled) setDatabaseProviders([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   usePageMeta(
     'Ponudniki za dogodke',
@@ -28,14 +53,37 @@ export default function ProvidersPage() {
   const filteredProviders = useMemo(() => {
     const min = minPrice === '' ? undefined : Number(minPrice);
     const max = maxPrice === '' ? undefined : Number(maxPrice);
-    const result = providers.filter((provider) => {
+    const liveProviders = databaseProviders.map((provider) => ({
+      id: provider.slug,
+      name: provider.business_name,
+      categoryIds: provider.provider_services.map((service) => service.categories?.slug ?? '').filter(Boolean),
+      categoryName: provider.provider_services.find((service) => service.categories)?.categories?.name,
+      eventTypes: [],
+      city: provider.city ?? '',
+      serviceArea: provider.service_areas.join(', ') || provider.region || '',
+      description: provider.description ?? provider.detailed_description ?? '',
+      priceFrom: provider.starting_price ?? 0,
+      priceUnit: 'na dogodek',
+      image: provider.cover_image_url || provider.logo_url || provider.provider_gallery[0]?.image_url || '',
+      gallery: provider.provider_gallery.map((image) => image.image_url),
+      tags: provider.provider_services.map((service) => service.title),
+      guestCapacity: undefined,
+      unavailableDates: provider.provider_unavailable_dates.map((item) => item.unavailable_date),
+      demoAvailabilityDates: [],
+      isDatabaseProvider: true,
+    }));
+    const result = [...liveProviders, ...providers.map((provider) => ({ ...provider, unavailableDates: [] as string[], isDatabaseProvider: false }))].filter((provider) => {
       const matchesCategory = !category || provider.categoryIds.includes(category);
       const matchesEventType = !eventType || provider.eventTypes.includes(eventType);
       const normalizedLocation = location.trim().toLocaleLowerCase('sl-SI');
       const matchesLocation =
         !normalizedLocation ||
         `${provider.city} ${provider.serviceArea}`.toLocaleLowerCase('sl-SI').includes(normalizedLocation);
-      const matchesDate = !date || provider.demoAvailabilityDates.includes(date);
+      const matchesDate =
+        !date ||
+        (provider.isDatabaseProvider
+          ? !provider.unavailableDates.includes(date)
+          : provider.demoAvailabilityDates.includes(date));
       const matchesGuests = !guests || !provider.guestCapacity || provider.guestCapacity >= guests;
       const matchesMin = min === undefined || provider.priceFrom >= min;
       const matchesMax = max === undefined || provider.priceFrom <= max;
@@ -64,7 +112,7 @@ export default function ProvidersPage() {
     if (sort === 'cena-visje') result.sort((a, b) => b.priceFrom - a.priceFrom);
     if (sort === 'ime') result.sort((a, b) => a.name.localeCompare(b.name, 'sl'));
     return result;
-  }, [category, date, eventType, guests, location, maxPrice, minPrice, searchTerm, sort]);
+  }, [category, databaseProviders, date, eventType, guests, location, maxPrice, minPrice, searchTerm, sort]);
 
   function updateSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -234,7 +282,7 @@ export default function ProvidersPage() {
             </div>
           )}
           <p className="demo-disclaimer">
-            Prikazani so izključno predstavitveni profili. Cene, fotografije in datumi razpoložljivosti so demo podatki.
+            Profili z oznako “Preverjen ponudnik” uporabljajo podatke iz ponudniških profilov Dogodive. Ostali profili so predstavitveni.
           </p>
         </div>
       </div>

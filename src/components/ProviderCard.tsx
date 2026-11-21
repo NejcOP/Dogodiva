@@ -8,6 +8,7 @@ export default function ProviderCard({ provider }: { provider: Provider }) {
   const categoryNames = provider.categoryIds
     .map((id) => categoryById.get(id)?.name)
     .filter((name): name is string => Boolean(name));
+  const displayCategories = provider.categoryName ? [provider.categoryName] : categoryNames;
 
   return (
     <article className="provider-card">
@@ -16,12 +17,14 @@ export default function ProviderCard({ provider }: { provider: Provider }) {
         to={`/ponudnik/${provider.id}`}
         aria-label={`Oglej si profil: ${provider.name}`}
       >
-        <img className="provider-card-image" src={provider.image} alt="" loading="lazy" />
-        <span className="demo-badge">{sl.common.demoLabel}</span>
+        {provider.image ? <img className="provider-card-image" src={provider.image} alt="" loading="lazy" /> : <span className="provider-card-image-placeholder" />}
+        <span className={`demo-badge ${provider.isDatabaseProvider ? 'verified-provider-badge' : ''}`}>
+          {provider.isDatabaseProvider ? 'Preverjen ponudnik' : sl.common.demoLabel}
+        </span>
       </Link>
       <div className="provider-card-body">
         <div className="provider-card-meta">
-          <span>{categoryNames.join(' · ')}</span>
+          <span>{displayCategories.join(' · ')}</span>
           <span className="provider-location">
             <MapPin size={13} /> {provider.city}
           </span>
