@@ -373,7 +373,7 @@ export const marketplaceService = {
     if (!supabase) throw new Error('Supabase not configured');
     const { data, error } = await supabase
       .from('marketplace_requests')
-      .select('*, marketplace_offers(id, provider_id)')
+      .select('*, marketplace_offers!marketplace_offers_request_id_fkey(id, provider_id)')
       .eq('status', 'open')
       .order('created_at', { ascending: false });
     if (error) throw error;
@@ -384,7 +384,7 @@ export const marketplaceService = {
     if (!supabase) throw new Error('Supabase not configured');
     const { data, error } = await supabase
       .from('marketplace_requests')
-      .select('*, profiles(first_name, last_name, email, phone), marketplace_offers(*)')
+      .select('*, profiles(first_name, last_name, email, phone), marketplace_offers!marketplace_offers_request_id_fkey(*)')
       .order('created_at', { ascending: false });
     if (error) throw error;
     return data ?? [];
@@ -396,7 +396,7 @@ export const marketplaceService = {
       .from('marketplace_requests')
       .select(`
         *,
-        marketplace_offers(
+        marketplace_offers!marketplace_offers_request_id_fkey(
           *,
           provider_profiles(id, business_name, slug, city, email, phone)
         ),
