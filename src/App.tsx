@@ -9,6 +9,7 @@ import OrganizeEventPage from './pages/OrganizeEventPage';
 import ProfilePage from './pages/ProfilePage';
 import ProviderProfilePage from './pages/ProviderProfilePage';
 import ProvidersPage from './pages/ProvidersPage';
+import RequestBoardPage from './pages/RequestBoardPage';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="ponudniki" element={<ProvidersPage />} />
         <Route path="ponudnik/:id" element={<ProviderProfilePage />} />
         <Route path="profil" element={<ProfilePage />} />
+        <Route path="povprasevanja" element={<RequestBoardPage />} />
         <Route path="organiziraj-dogodek" element={<OrganizeEventPage />} />
         <Route path="kategorije/maturantski-plesi" element={<GraduationPage />} />
         <Route path="prijava" element={<AuthPage mode="login" />} />

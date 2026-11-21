@@ -16,6 +16,13 @@ export interface Database {
           city: string | null;
           country: string;
           bio: string | null;
+          upcoming_event: {
+            event_type: string;
+            event_date: string;
+            guest_count: number | null;
+            budget: number | null;
+          };
+          email_notifications: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -30,6 +37,13 @@ export interface Database {
           city?: string | null;
           country?: string;
           bio?: string | null;
+          upcoming_event?: {
+            event_type: string;
+            event_date: string;
+            guest_count: number | null;
+            budget: number | null;
+          };
+          email_notifications?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -44,6 +58,13 @@ export interface Database {
           city?: string | null;
           country?: string;
           bio?: string | null;
+          upcoming_event?: {
+            event_type: string;
+            event_date: string;
+            guest_count: number | null;
+            budget: number | null;
+          };
+          email_notifications?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -668,12 +689,126 @@ export interface Database {
           reviewed_at?: string | null;
         };
       };
+      marketplace_requests: {
+        Row: {
+          id: string;
+          customer_id: string;
+          title: string;
+          event_type: string;
+          event_date: string | null;
+          location: string;
+          guest_count: number | null;
+          budget_min: number | null;
+          budget_max: number | null;
+          description: string;
+          category_ids: string[];
+          status: 'open' | 'closed' | 'completed' | 'cancelled';
+          accepted_offer_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          customer_id: string;
+          title: string;
+          event_type: string;
+          event_date?: string | null;
+          location: string;
+          guest_count?: number | null;
+          budget_min?: number | null;
+          budget_max?: number | null;
+          description: string;
+          category_ids?: string[];
+          status?: 'open' | 'closed' | 'completed' | 'cancelled';
+          accepted_offer_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          customer_id?: string;
+          title?: string;
+          event_type?: string;
+          event_date?: string | null;
+          location?: string;
+          guest_count?: number | null;
+          budget_min?: number | null;
+          budget_max?: number | null;
+          description?: string;
+          category_ids?: string[];
+          status?: 'open' | 'closed' | 'completed' | 'cancelled';
+          accepted_offer_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      marketplace_offers: {
+        Row: {
+          id: string;
+          request_id: string;
+          provider_id: string;
+          message: string;
+          price: number | null;
+          status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          request_id: string;
+          provider_id: string;
+          message: string;
+          price?: number | null;
+          status?: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          request_id?: string;
+          provider_id?: string;
+          message?: string;
+          price?: number | null;
+          status?: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      marketplace_messages: {
+        Row: {
+          id: string;
+          request_id: string;
+          provider_id: string;
+          sender_id: string;
+          message: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          request_id: string;
+          provider_id: string;
+          sender_id: string;
+          message: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          request_id?: string;
+          provider_id?: string;
+          sender_id?: string;
+          message?: string;
+          created_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      accept_marketplace_offer: {
+        Args: { p_offer_id: string };
+        Returns: Database['public']['Tables']['marketplace_requests']['Row'];
+      };
     };
     Enums: {
       [_ in never]: never;

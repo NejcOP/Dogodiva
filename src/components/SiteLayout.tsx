@@ -7,6 +7,7 @@ import {
   ChevronDown,
   Heart,
   Menu,
+  MessageSquareText,
   X,
   Search,
   Zap,
@@ -201,6 +202,16 @@ function Header() {
             <Users size={16} />
             Postani ponudnik
           </Link>
+          {profile?.role === 'provider' && (
+            <NavLink
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              to="/povprasevanja"
+              onClick={closeMenu}
+            >
+              <MessageSquareText size={16} />
+              Povpraševanja strank
+            </NavLink>
+          )}
           <div className="nav-actions">
             {user && profile ? (
               <div 
