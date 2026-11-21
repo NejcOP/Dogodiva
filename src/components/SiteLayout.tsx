@@ -251,6 +251,18 @@ function Header() {
                     >
                       Moj profil
                     </Link>
+                    {profile.role === 'admin' && (
+                      <Link
+                        to="/admin"
+                        className="profile-menu-item"
+                        onClick={() => {
+                          setProfileOpen(false);
+                          closeMenu();
+                        }}
+                      >
+                        Skrbništvo
+                      </Link>
+                    )}
                     <button
                       type="button"
                       className="profile-menu-item profile-logout"

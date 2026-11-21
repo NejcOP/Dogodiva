@@ -5,6 +5,7 @@ import { useCategories } from '../hooks/useData';
 import { usePageMeta } from '../lib/seo';
 import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/auth';
+import { contactService } from '../services/database';
 import {
   providerApplicationService,
   type ProviderApplication,
@@ -126,10 +127,25 @@ export default function InfoPage({ page }: InfoPageProps) {
 
   async function handleContactSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setNotice('');
+    setError('');
     setIsSubmitting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 350));
-    setNotice('To je predstavitveni obrazec. Podatki niso bili poslani ali shranjeni.');
-    setIsSubmitting(false);
+    try {
+      const formElement = event.currentTarget;
+      const form = new FormData(formElement);
+      await contactService.submitMessage({
+        name: String(form.get('name') ?? '').trim() || 'Obiskovalec Dogodive',
+        email: String(form.get('email') ?? '').trim(),
+        subject: String(form.get('subject') ?? '').trim(),
+        message: String(form.get('message') ?? '').trim(),
+      });
+      setNotice('Sporočilo je bilo poslano. Ekipa Dogodive vam bo odgovorila prek e-pošte.');
+      formElement.reset();
+    } catch (contactError) {
+      setError(contactError instanceof Error ? contactError.message : 'Sporočila ni bilo mogoče poslati.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   if (page === 'become-provider') {
@@ -304,10 +320,11 @@ export default function InfoPage({ page }: InfoPageProps) {
         <div className="container narrow-content">
           <span className="eyebrow">Povežimo se</span>
           <h1>Tu smo za tvoja vprašanja.</h1>
-          <p>Za vprašanja o platformi uporabi spodnji obrazec. V tej predstavitveni različici sporočilo ni poslano.</p>
+          <p>Za vprašanja o platformi uporabi spodnji obrazec. Odgovor boš prejel/a na vneseni e-naslov.</p>
           <div className="inquiry-card contact-card">
             <h2>Pošlji sporočilo</h2>
             <form className="inquiry-form" onSubmit={handleContactSubmit}>
+              <label>Tvoje ime<input name="name" autoComplete="name" minLength={2} required /></label>
               <label>Tvoj e-naslov<input type="email" name="email" required /></label>
               <label>Zadeva<input name="subject" minLength={3} required /></label>
               <label>Sporočilo<textarea name="message" minLength={10} maxLength={1200} required /></label>
@@ -315,6 +332,7 @@ export default function InfoPage({ page }: InfoPageProps) {
                 {isSubmitting ? 'Pripravljam …' : 'Pripravi sporočilo'} <ArrowRight size={16} />
               </button>
               {notice && <p className="form-notice" role="status">{notice}</p>}
+              {error && <p className="form-error" role="alert">{error}</p>}
               <p className="form-footnote">Predstavitveni obrazec: sporočila se ne pošiljajo.</p>
             </form>
           </div>

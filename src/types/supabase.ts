@@ -118,7 +118,8 @@ export interface Database {
           postal_code: string | null;
           vat_number: string | null;
           verification_status: 'unverified' | 'pending' | 'verified' | 'rejected';
-          subscription_plan: 'free' | 'starter' | 'professional' | 'premium';
+          subscription_plan: 'basic' | 'premium' | 'business';
+          region: string | null;
           subscription_status: 'active' | 'inactive' | 'cancelled';
           average_rating: number;
           total_reviews: number;
@@ -143,7 +144,8 @@ export interface Database {
           postal_code?: string | null;
           vat_number?: string | null;
           verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected';
-          subscription_plan?: 'free' | 'starter' | 'professional' | 'premium';
+          subscription_plan?: 'basic' | 'premium' | 'business';
+          region?: string | null;
           subscription_status?: 'active' | 'inactive' | 'cancelled';
           average_rating?: number;
           total_reviews?: number;
@@ -168,7 +170,8 @@ export interface Database {
           postal_code?: string | null;
           vat_number?: string | null;
           verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected';
-          subscription_plan?: 'free' | 'starter' | 'professional' | 'premium';
+          subscription_plan?: 'basic' | 'premium' | 'business';
+          region?: string | null;
           subscription_status?: 'active' | 'inactive' | 'cancelled';
           average_rating?: number;
           total_reviews?: number;
@@ -842,6 +845,10 @@ export interface Database {
       };
       approve_provider_application: {
         Args: { p_application_id: string; p_review_notes?: string | null };
+        Returns: Database['public']['Tables']['provider_applications']['Row'];
+      };
+      reject_provider_application: {
+        Args: { p_application_id: string; p_review_notes: string };
         Returns: Database['public']['Tables']['provider_applications']['Row'];
       };
     };

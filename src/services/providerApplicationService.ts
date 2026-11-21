@@ -75,7 +75,7 @@ export const providerApplicationService = {
 export const providerApplicationAdminService = {
   async getAllApplications(filters?: { status?: string; category_id?: string }) {
     if (!supabase) throw new Error('Supabase ni konfiguriran.');
-    let query = supabase.from('provider_applications').select('*');
+    let query = supabase.from('provider_applications').select('*, categories(name)');
     if (filters?.status) query = query.eq('status', filters.status);
     if (filters?.category_id) query = query.eq('category_id', filters.category_id);
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -95,19 +95,10 @@ export const providerApplicationAdminService = {
 
   async rejectApplication(applicationId: string, reviewNotes: string) {
     if (!supabase) throw new Error('Supabase ni konfiguriran.');
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) throw new Error('Prijavite se kot administrator.');
-    const { data, error } = await supabase
-      .from('provider_applications')
-      .update({
-        status: 'rejected',
-        reviewed_by: user.user.id,
-        review_notes: reviewNotes,
-        reviewed_at: new Date().toISOString(),
-      })
-      .eq('id', applicationId)
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc('reject_provider_application', {
+      p_application_id: applicationId,
+      p_review_notes: reviewNotes,
+    });
     if (error) throw error;
     return data;
   },
