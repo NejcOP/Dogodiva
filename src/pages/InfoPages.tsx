@@ -85,7 +85,10 @@ export default function InfoPage({ page }: InfoPageProps) {
       const contactPerson = String(form.get('contact') ?? '').trim();
       const email = String(form.get('email') ?? '').trim();
       const phone = String(form.get('phone') ?? '').trim();
-      const categoryId = String(form.get('category') ?? '').trim();
+      const categorySlug = String(form.get('category') ?? '').trim();
+      const selectedCategoryObject = categories.find(c => c.slug === categorySlug);
+      if (!selectedCategoryObject?.id) throw new Error('Izbrana kategorija ni na voljo.');
+      const categoryId = selectedCategoryObject.id;
       const city = String(form.get('city') ?? '').trim();
       const region = String(form.get('region') ?? '').trim();
       const website = String(form.get('website') ?? '').trim() || null;
@@ -276,7 +279,7 @@ export default function InfoPage({ page }: InfoPageProps) {
                     {categoriesLoading ? 'Nalagam kategorije …' : 'Izberi kategorijo'}
                   </option>
                   {categories.map((category) => (
-                    <option key={category.id} value={category.id}>{category.name}</option>
+                    <option key={category.id} value={category.slug}>{category.name}</option>
                   ))}
                 </select>
                 {categoriesError && <small>V kategorijah je nastala napaka. Osveži stran in poskusi znova.</small>}
