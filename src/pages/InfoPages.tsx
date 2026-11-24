@@ -10,6 +10,7 @@ import {
   providerApplicationService,
   type ProviderApplication,
 } from '../services/providerApplicationService';
+import { getSpecializationsForCategory, getSpecializationLabel } from '../data/specializations';
 
 type InfoPageProps = {
   page: 'become-provider' | 'about' | 'contact' | 'terms' | 'provider-terms' | 'privacy';
@@ -33,6 +34,9 @@ export default function InfoPage({ page }: InfoPageProps) {
   const [isApplicationLoading, setIsApplicationLoading] = useState(false);
   const [application, setApplication] = useState<ProviderApplication | null>(null);
   const [accountMode, setAccountMode] = useState<'create' | 'later'>('create');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSpecialization, setSelectedSpecialization] = useState('');
+  const [selectedExpertiseAreas, setSelectedExpertiseAreas] = useState<string[]>([]);
   usePageMeta(pageMeta[page][0], pageMeta[page][1]);
 
   useEffect(() => {
@@ -86,6 +90,8 @@ export default function InfoPage({ page }: InfoPageProps) {
       const region = String(form.get('region') ?? '').trim();
       const website = String(form.get('website') ?? '').trim() || null;
       const description = String(form.get('description') ?? '').trim() || null;
+      const specialization = String(form.get('specialization') ?? '').trim() || null;
+      const expertiseAreas = selectedExpertiseAreas;
       const termsAccepted = form.get('terms') === 'on';
       const password = String(form.get('password') ?? '');
       const confirmPassword = String(form.get('confirmPassword') ?? '');
@@ -109,6 +115,8 @@ export default function InfoPage({ page }: InfoPageProps) {
         region,
         website,
         description: description ?? '',
+        specialization,
+        expertiseAreas,
         termsAccepted,
       });
 
@@ -253,7 +261,17 @@ export default function InfoPage({ page }: InfoPageProps) {
               </label>
               <label>
                 Glavna kategorija
-                <select name="category" required defaultValue="" disabled={categoriesLoading || Boolean(categoriesError)}>
+                <select 
+                  name="category" 
+                  required 
+                  defaultValue="" 
+                  disabled={categoriesLoading || Boolean(categoriesError)}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setSelectedSpecialization('');
+                    setSelectedExpertiseAreas([]);
+                  }}
+                >
                   <option value="" disabled>
                     {categoriesLoading ? 'Nalagam kategorije …' : 'Izberi kategorijo'}
                   </option>
@@ -263,6 +281,45 @@ export default function InfoPage({ page }: InfoPageProps) {
                 </select>
                 {categoriesError && <small>V kategorijah je nastala napaka. Osveži stran in poskusi znova.</small>}
               </label>
+              {selectedCategory && getSpecializationsForCategory(selectedCategory).length > 0 && (
+                <>
+                  <label>
+                    {getSpecializationLabel(selectedCategory)}
+                    <select 
+                      name="specialization" 
+                      onChange={(e) => setSelectedSpecialization(e.target.value)}
+                      value={selectedSpecialization}
+                    >
+                      <option value="">Izberi specialnost</option>
+                      {getSpecializationsForCategory(selectedCategory).map((spec) => (
+                        <option key={spec} value={spec}>{spec}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Kaj dodatno še ponudiš?
+                    <div className="expertise-areas-container">
+                      {getSpecializationsForCategory(selectedCategory).map((spec) => (
+                        <label key={spec} className="expertise-checkbox">
+                          <input 
+                            type="checkbox"
+                            value={spec}
+                            checked={selectedExpertiseAreas.includes(spec)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedExpertiseAreas([...selectedExpertiseAreas, spec]);
+                              } else {
+                                setSelectedExpertiseAreas(selectedExpertiseAreas.filter(area => area !== spec));
+                              }
+                            }}
+                          />
+                          <span>{spec}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </label>
+                </>
+              )}
               <label>
                 Spletna stran ali Instagram (neobvezno)
                 <input name="website" placeholder="https://… ali @uporabnisko_ime" />
