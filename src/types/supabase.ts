@@ -879,6 +879,8 @@ export interface Database {
           p_region: string;
           p_website: string | null;
           p_description: string;
+          p_specialization?: string | null;
+          p_expertise_areas?: string[];
           p_terms_accepted: boolean;
         };
         Returns: Database['public']['Tables']['provider_applications']['Row'];

@@ -100,6 +100,21 @@ export default function InfoPage({ page }: InfoPageProps) {
       const confirmPassword = String(form.get('confirmPassword') ?? '');
       let accountCreatedWithoutSession = false;
 
+      console.log('Form submission data:', {
+        businessName,
+        contactPerson,
+        email,
+        phone,
+        categoryId,
+        city,
+        region,
+        website,
+        description,
+        specialization,
+        expertiseAreas,
+        termsAccepted,
+      });
+
       if (!user && accountMode === 'create') {
         if (password.length < 8 || password !== confirmPassword) {
           throw new Error('Geslo mora imeti najmanj 8 znakov in se mora ujemati s potrditvijo.');
@@ -130,6 +145,7 @@ export default function InfoPage({ page }: InfoPageProps) {
           : 'Vaša prijava je v pregledu. Po potrditvi boste prejeli dostop do nadzorne plošče ponudnika.',
       );
     } catch (err) {
+      console.error('Submit error:', err);
       setError(err instanceof Error ? err.message : 'Prišlo je do napake. Poskusi znova.');
     } finally {
       setIsSubmitting(false);
