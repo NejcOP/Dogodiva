@@ -12,6 +12,7 @@ import ProvidersPage from './pages/ProvidersPage';
 import RequestBoardPage from './pages/RequestBoardPage';
 import AdminPage from './pages/AdminPage';
 import ProviderDashboardPage from './pages/ProviderDashboardPage';
+import AIEventPlanResultPage from './pages/AIEventPlanResultPage';
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="ponudnik/:id" element={<ProviderProfilePage />} />
         <Route path="profil" element={<ProfilePage />} />
         <Route path="povprasevanja" element={<RequestBoardPage />} />
+        <Route path="ai-event-plan" element={<AIEventPlanResultPage />} />
         <Route path="admin" element={<AdminPage />} />
         <Route path="ponudnik-nadzorna-plosca" element={<ProviderDashboardPage />} />
         <Route path="organiziraj-dogodek" element={<OrganizeEventPage />} />

@@ -13,6 +13,8 @@ type ProviderApplicationInput = {
   region: string;
   website: string | null;
   description: string;
+  specialization: string | null;
+  expertiseAreas: string[];
   termsAccepted: boolean;
 };
 
@@ -30,6 +32,8 @@ export const providerApplicationService = {
       p_region: input.region,
       p_website: input.website,
       p_description: input.description,
+      p_specialization: input.specialization,
+      p_expertise_areas: input.expertiseAreas,
       p_terms_accepted: input.termsAccepted,
     });
 

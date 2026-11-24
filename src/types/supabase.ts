@@ -686,6 +686,8 @@ export interface Database {
           website: string | null;
           description: string | null;
           region: string | null;
+          specialization: string | null;
+          expertise_areas: string[];
           terms_accepted_at: string | null;
           founding_partner_number: number | null;
           user_id: string | null;
@@ -708,6 +710,8 @@ export interface Database {
           website?: string | null;
           description?: string | null;
           region?: string | null;
+          specialization?: string | null;
+          expertise_areas?: string[];
           terms_accepted_at?: string | null;
           founding_partner_number?: number | null;
           user_id?: string | null;
@@ -730,6 +734,8 @@ export interface Database {
           website?: string | null;
           description?: string | null;
           region?: string | null;
+          specialization?: string | null;
+          expertise_areas?: string[];
           terms_accepted_at?: string | null;
           founding_partner_number?: number | null;
           user_id?: string | null;

@@ -510,4 +510,15 @@ export const marketplaceService = {
     if (error) throw error;
     return data;
   },
+
+  async getPublicRequests() {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase
+      .from('marketplace_requests')
+      .select('*')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  },
 };

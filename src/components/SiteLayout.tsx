@@ -3,7 +3,6 @@ import * as React from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import {
   ArrowRight,
-  CalendarHeart,
   ChevronDown,
   Heart,
   Menu,
@@ -22,9 +21,7 @@ import { useAuth } from '../hooks/useAuth';
 function Brand() {
   return (
     <Link className="brand" to="/" aria-label="Dogodiva – na domačo stran">
-      <span className="brand-mark" aria-hidden="true">
-        <CalendarHeart size={24} strokeWidth={1.8} />
-      </span>
+      <img src="/logo.png" alt="Dogodiva logo" className="brand-mark" />
       <span>{sl.brand}</span>
     </Link>
   );
@@ -206,7 +203,7 @@ function Header() {
             <>
               <NavLink
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                to="/povprasevanja"
+                to="/povprasevanja-ponudnika"
                 onClick={closeMenu}
               >
                 <MessageSquareText size={16} />
@@ -217,7 +214,7 @@ function Header() {
                 to="/ponudnik-nadzorna-plosca"
                 onClick={closeMenu}
               >
-                <CalendarHeart size={16} />
+                <MessageSquareText size={16} />
                 Nadzorna plošča ponudnika
               </NavLink>
             </>

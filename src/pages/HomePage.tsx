@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProviderCard from '../components/ProviderCard';
-import SearchForm from '../components/SearchForm';
+import HeroSearch from '../components/HeroSearch';
 import { categories } from '../data/categories';
 import { providers } from '../data/providers';
 import { usePageMeta } from '../lib/seo';
@@ -46,8 +46,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="hero-search">
-            <SearchForm />
-            <p>Začnite z idejo — ponudnike lahko primerjate brez obveznosti.</p>
+            <HeroSearch />
           </div>
         </div>
         <div className="hero-index">01 <span /> 03</div>
